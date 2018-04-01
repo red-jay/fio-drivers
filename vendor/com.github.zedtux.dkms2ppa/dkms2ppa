@@ -40,7 +40,7 @@ show_usage() {
 
 must_be_executed_as_root() {
 	# Must be root
-	[[ -z $SUDO_USER ]] && echo && echo "You must use sudo command to execute $0" && exit 2
+	[[ $(id -u) -ne 0 ]] && echo && echo "You must use sudo command to execute $0" && exit 2
 }
 
 check_dependencies() {
