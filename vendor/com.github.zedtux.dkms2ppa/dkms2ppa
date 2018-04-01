@@ -51,10 +51,10 @@ check_dependencies() {
 	echo "   -> Using dkms version $DKMS_VERSION"
 
 	### debsign
-	DEBSIGN_PATH=`which debsign`
-	[[ -z "$DEBSIGN_PATH" ]] && echo "[E] It seems that you didn't installed debsign. (devscripts for Ubuntu)" && exit 2
-	DEBSIGN_VERSION=`debsign --version | sed 's/.*version \([0-9\.]*\).*/\1/' | head -n 1`
-	echo "   -> Using debsign version $DEBSIGN_VERSION"
+	#DEBSIGN_PATH=`which debsign`
+	#[[ -z "$DEBSIGN_PATH" ]] && echo "[E] It seems that you didn't installed debsign. (devscripts for Ubuntu)" && exit 2
+	#DEBSIGN_VERSION=`debsign --version | sed 's/.*version \([0-9\.]*\).*/\1/' | head -n 1`
+	#echo "   -> Using debsign version $DEBSIGN_VERSION"
 
 	### dput
 	DPUT_PATH=`which dput`
@@ -216,8 +216,8 @@ EOF
 sign_and_upload_source() {
 	CHANGES_FILE_PATH="/var/lib/dkms/$PACKAGE_NAME/$PACKAGE_VERSION/dsc/$PACKAGE_NAME-dkms_${PACKAGE_VERSION}_source.changes"
 
-	echo "   -> Signing package..."
-	debsign "$CHANGES_FILE_PATH" > /dev/null 2>&1
+	#echo "   -> Signing package..."
+	#debsign "$CHANGES_FILE_PATH" > /dev/null 2>&1
 
 	echo "   -> Uploading package..."
 	dput $DPUT_ENTRY "$CHANGES_FILE_PATH"
