@@ -1,0 +1,258 @@
+#!/bin/bash
+#title           : DKMS 2 PPA
+#description     : Prepare a debian package of a DKMS module and upload it.
+#author          : zedtux
+#date            : 20140411
+#version         : 2.0.0
+#usage           : dkms2ppa
+#source          : https://github.com/zedtux/dkms2ppa
+
+SCRIPT_VERSION=2.0.0
+
+# Retrieve the current folder name
+# which has to be the package name
+ORIGINAL_PACKAGE_NAME="${PWD##*/}"
+PACKAGE_NAME="$ORIGINAL_PACKAGE_NAME"
+WORKING_DIR="$PWD"
+
+DEBIAN_FOLDER_PATH="$WORKING_DIR/$ORIGINAL_PACKAGE_NAME-debian/debian/"
+SOURCE_FOLDER_PATH="$WORKING_DIR/$ORIGINAL_PACKAGE_NAME/"
+
+DPUT_ENTRY=$1
+DEBFULLNAME=$2
+DEBEMAIL=$3
+TARGET=$4
+
+greeting() {
+	echo "DKMS to PPA by Guillaume Hain <zedtux@zedroot.org> version $SCRIPT_VERSION"
+}
+
+show_usage() {
+	echo
+	echo "ERROR: At least one parameter is missing."
+	echo "Usage: $0 ppa_entry [target]"
+	echo
+	echo "Examples:"
+	echo "    $0 ppa:$SUDO_USER/hello_ppa"
+	echo "    $0 http://repo.my-domain.com `lsb_release -cs`"
+	echo
+}
+
+must_be_executed_as_root() {
+	# Must be root
+	[[ -z $SUDO_USER ]] && echo && echo "You must use sudo command to execute $0" && exit 2
+}
+
+check_dependencies() {
+	### dkms
+	DKMS_PATH=`which dkms`
+	[[ -z "$DKMS_PATH" ]] && echo "[E] It seems that you didn't installed dkms. (dkms for Ubuntu)" && exit 2
+	DKMS_VERSION=`dkms --version | sed 's/^dkms: \([0-9]\)/\1/'`
+	echo "   -> Using dkms version $DKMS_VERSION"
+
+	### debsign
+	DEBSIGN_PATH=`which debsign`
+	[[ -z "$DEBSIGN_PATH" ]] && echo "[E] It seems that you didn't installed debsign. (devscripts for Ubuntu)" && exit 2
+	DEBSIGN_VERSION=`debsign --version | sed 's/.*version \([0-9\.]*\).*/\1/' | head -n 1`
+	echo "   -> Using debsign version $DEBSIGN_VERSION"
+
+	### dput
+	DPUT_PATH=`which dput`
+	[[ -z "$DPUT_PATH" ]] && echo "[E] It seems that you didn't installed dput. (dput for Ubuntu)" && exit 2
+	DPUT_VERSION=`dput --version | sed 's/^dput \([0-9]\)/\1/'`
+	echo "   -> Using dput version $DPUT_VERSION"
+
+	### Ensure debhelper package is installed
+	dpkg-query -l debhelper > /dev/null
+	[[ "$?" == "1" ]] && echo "[E] It seems that you didn't installed debhelper package." && exit 2
+}
+
+show_package_information() {
+	echo "    Name: $PACKAGE_NAME"
+	echo "    Version: $VERSION"
+	echo "    dput entry: $DPUT_ENTRY"
+	echo "    Target: $TARGET"
+	echo "    Final name: $PACKAGE_NAME-dkms_$PACKAGE_VERSION"
+	if [ -n "$DEBFULLNAME" ] && [ -n "$DEBEMAIL" ]; then
+		echo "    Maintainer: $MAINTAINER"
+	fi
+}
+
+sanity_checks() {
+	if [[ -z "$DPUT_ENTRY" ]]; then
+		# New line
+		echo
+
+		[[ -z "$DPUT_ENTRY" ]] && echo "[E] You must pass the DPUT repository name/URL"
+
+		show_usage
+		exit 1
+	fi
+
+	# In the case there is no debian folder
+	if [[ ! -d "$DEBIAN_FOLDER_PATH" ]]; then
+		# Require to have the DEBFULLNAME and DEBEMAIL variable passed as argument
+		if [ -z "$DEBFULLNAME" ] || [ -z "$DEBEMAIL" ]; then
+			# New line
+			echo
+
+			[[ -z "$DEBFULLNAME" ]] && echo "[E] You must pass the DEBFULLNAME with your full name"
+			[[ -z "$DEBEMAIL" ]] && echo "[E] You must pass the DEBEMAIL with your email address"
+
+			show_usage
+			exit 1
+		fi
+	fi
+}
+
+update_variables() {
+	# If no TARGET get the one from the host machine
+	[[ -z "$TARGET" ]] && TARGET=`lsb_release -cs`
+	MAINTAINER="$DEBFULLNAME <$DEBEMAIL>"
+	PACKAGE_VERSION="$VERSION-${TARGET}1"
+}
+
+prepare_sources() {
+	echo "   -> Preparing sources"
+	KERNEL_MODULE_SOURCE_PATH="/usr/src/$PACKAGE_NAME-$PACKAGE_VERSION"
+	[[ -d "$KERNEL_MODULE_SOURCE_PATH" ]] && rm -rf "$KERNEL_MODULE_SOURCE_PATH"
+	mkdir "$KERNEL_MODULE_SOURCE_PATH"
+	cp $SOURCE_FOLDER_PATH/*.c "$KERNEL_MODULE_SOURCE_PATH"
+	cp $SOURCE_FOLDER_PATH/*.h "$KERNEL_MODULE_SOURCE_PATH"
+	cp $SOURCE_FOLDER_PATH/Makefile "$KERNEL_MODULE_SOURCE_PATH"
+	cp $SOURCE_FOLDER_PATH/dkms.conf "$KERNEL_MODULE_SOURCE_PATH"
+}
+
+# ~~~~ DKMS functions ~~~~
+check_and_read_dkms_conf() {
+	# Ensure dkms.conf file exists
+	[[ ! -f "$SOURCE_FOLDER_PATH/dkms.conf" ]] && echo "[E] Missing file $SOURCE_FOLDER_PATH/dkms.conf" && exit 2
+
+	# Read the module name and version from the dkms.conf file
+	PACKAGE_NAME=$(grep 'PACKAGE_NAME' "$SOURCE_FOLDER_PATH/dkms.conf" | cut -f2 -d'=' | tr -d '"')
+	VERSION=$(grep 'PACKAGE_VERSION' "$SOURCE_FOLDER_PATH/dkms.conf" | cut -f2 -d'=' | tr -d '"')
+}
+
+dkms_clean() {
+	echo "   -> Cleaning existing version"
+	# Clean existing DKMS installation for the given version if exists
+	dkms remove $PACKAGE_NAME/$PACKAGE_VERSION --all > /dev/null 2>&1
+}
+
+dkms_add() {
+	[[ -d "/var/lib/dkms/$PACKAGE_NAME/$PACKAGE_VERSION/" ]] && rm -rf "/var/lib/dkms/$PACKAGE_NAME/$PACKAGE_VERSION/"
+	echo "   -> DKMS add"
+	dkms add -m $PACKAGE_NAME -v $PACKAGE_VERSION > /dev/null 2>&1
+}
+
+dkms_build() {
+	echo "   -> DKMS build"
+	dkms build -m $PACKAGE_NAME -v $PACKAGE_VERSION > /dev/null 2>&1
+}
+
+dkms_install() {
+	echo "   -> DKMS install"
+	dkms install --force -m $PACKAGE_NAME -v $PACKAGE_VERSION > /dev/null 2>&1
+}
+
+dkms_mkdsc() {
+	echo "   -> DKMS mkdsc"
+	dkms mkdsc -m $PACKAGE_NAME -v $PACKAGE_VERSION --source-only > /dev/null 2>&1
+}
+# ~~~~
+
+preapre_debian_folder() {
+	if [[ -d "$DEBIAN_FOLDER_PATH" ]]; then
+		echo "   -> Using debian files..."
+		KERNEL_MODULE_DEBIAN_PATH="$KERNEL_MODULE_SOURCE_PATH/$PACKAGE_NAME-dkms-mkdeb/debian/"
+		mkdir -p "$KERNEL_MODULE_DEBIAN_PATH"
+
+		# Copy debian files
+		cp $DEBIAN_FOLDER_PATH/* "$KERNEL_MODULE_DEBIAN_PATH"
+
+		# ~~~~ debian/changelog ~~~~
+		# Update distribution of the changelog file
+		sed -i -r 's/\)\ (unstable|UNRELEASED)\;/\)\ '$TARGET'\;/' "$KERNEL_MODULE_DEBIAN_PATH/changelog"
+		# Update the version for Ubuntu
+		sed -i -r 's/\(([0-9\.]*)\)/\('$PACKAGE_VERSION'\)/' "$KERNEL_MODULE_DEBIAN_PATH/changelog"
+		# Update the package name if needed (In the case altered by git)
+		sed -i -r 's/^(.*) \(/'$PACKAGE_NAME' \(/' "$KERNEL_MODULE_DEBIAN_PATH/changelog"
+
+		# ~~~~ debian/control ~~~~
+		cp "$DEBIAN_FOLDER_PATH/control" "$KERNEL_MODULE_DEBIAN_PATH"
+		# Update the package name if needed (In the case altered by git)
+		sed -i -r 's/^Source: (.*)/Source: '$PACKAGE_NAME'/' "$KERNEL_MODULE_DEBIAN_PATH/control"
+		sed -i -r 's/^Package: (.*)/Package: '$PACKAGE_NAME'/' "$KERNEL_MODULE_DEBIAN_PATH/control"
+	else
+		echo "  - Updating template..."
+		# Update the debian/changelog
+		cat > /etc/dkms/template-dkms-mkdeb/debian/changelog << EOF
+DEBIAN_PACKAGE-dkms (MODULE_VERSION) $TARGET; urgency=low
+
+	* Automatically packaged by DKMS.
+
+ -- $MAINTAINER  DATE_STAMP
+EOF
+
+		# Update the debian/control
+		cat > /etc/dkms/template-dkms-mkdeb/debian/control << EOF
+Source: DEBIAN_PACKAGE-dkms
+Section: misc
+Priority: optional
+XSBC-Original-Maintainer: $MAINTAINER
+Maintainer: $MAINTAINER
+Build-Depends: debhelper (>= 7), dkms
+Standards-Version: 3.8.1
+
+Package: DEBIAN_PACKAGE-dkms
+Architecture: all
+Depends: dkms (>= 1.95), ${misc:Depends}
+Description: DEBIAN_PACKAGE kernel module in DKMS format.
+
+EOF
+	fi
+}
+
+sign_and_upload_source() {
+	CHANGES_FILE_PATH="/var/lib/dkms/$PACKAGE_NAME/$PACKAGE_VERSION/dsc/$PACKAGE_NAME-dkms_${PACKAGE_VERSION}_source.changes"
+
+	echo "   -> Signing package..."
+	debsign "$CHANGES_FILE_PATH" > /dev/null 2>&1
+
+	echo "   -> Uploading package..."
+	dput $DPUT_ENTRY "$CHANGES_FILE_PATH"
+}
+
+
+
+greeting
+
+# All checks before compilation and packaging
+must_be_executed_as_root
+
+echo
+echo "[+] Checking dependencies ..."
+check_and_read_dkms_conf
+check_dependencies
+sanity_checks
+update_variables
+
+echo
+echo "[+] Package information"
+show_package_information
+
+echo
+echo "[+] Compilation ..."
+dkms_clean
+prepare_sources
+dkms_add
+dkms_build
+dkms_install
+
+echo
+echo "[+] Packaging ..."
+preapre_debian_folder
+dkms_mkdsc
+
+# Sign and upload
+sign_and_upload_source
