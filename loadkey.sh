@@ -8,3 +8,6 @@ set +x
   echo "${GPG_SECRET}" | fold -w64
   echo "-----END PGP PRIVATE KEY BLOCK-----"
 } | gpg --import || true
+
+passphrase=$(mktemp /dev/shm/pass.XXXXXX)
+echo "${GPG_PASS}" > "${passphrase}"

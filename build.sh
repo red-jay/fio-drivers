@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-export DEBSIGN_PROGRAM="gpg --no-tty --passphrase ${GPG_PASSPHRASE}"
+GPG_PASSFILE=(/dev/shm/pass.*)
+
+export DEBSIGN_PROGRAM="gpg --no-tty --passphrase-file ${GPG_PASSFILE[0]}"
 
 set -eux
 set -o pipefail
