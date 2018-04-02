@@ -217,7 +217,7 @@ sign_and_upload_source() {
 	CHANGES_FILE_PATH="/var/lib/dkms/$PACKAGE_NAME/$PACKAGE_VERSION/dsc/$PACKAGE_NAME-dkms_${PACKAGE_VERSION}_source.changes"
 
 	echo "   -> Signing package..."
-	debsign "$CHANGES_FILE_PATH"
+	bash -x $(which debsign) "$CHANGES_FILE_PATH"
 
 	echo "   -> Uploading package..."
 	dput $DPUT_ENTRY "$CHANGES_FILE_PATH"
