@@ -109,7 +109,7 @@ update_variables() {
 	# If no TARGET get the one from the host machine
 	[[ -z "$TARGET" ]] && TARGET=`lsb_release -cs`
 	MAINTAINER="$DEBFULLNAME <$DEBEMAIL>"
-	PACKAGE_VERSION="$VERSION-${TARGET}3"
+	PACKAGE_VERSION="$VERSION-${TARGET}4"
 }
 
 prepare_sources() {
@@ -117,7 +117,7 @@ prepare_sources() {
 	KERNEL_MODULE_SOURCE_PATH="/usr/src/$PACKAGE_NAME-$PACKAGE_VERSION"
 	[[ -d "$KERNEL_MODULE_SOURCE_PATH" ]] && rm -rf "$KERNEL_MODULE_SOURCE_PATH"
 	mkdir "$KERNEL_MODULE_SOURCE_PATH"
-	cp $SOURCE_FOLDER_PATH/* "$KERNEL_MODULE_SOURCE_PATH"
+	cp -a $SOURCE_FOLDER_PATH/* "$KERNEL_MODULE_SOURCE_PATH"
 }
 
 # ~~~~ DKMS functions ~~~~
