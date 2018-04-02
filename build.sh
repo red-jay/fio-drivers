@@ -31,4 +31,4 @@ sudo cp -a "${iomem_deb_extract}"/debian "${dkms2ppa_dir}/iomemory-vsl-debian"
 sudo cp -a "${tgt[0]}" "${dkms2ppa_dir}/iomemory-vsl"
 
 cd "${dkms2ppa_dir}"
-"${srcdir}/vendor/com.github.zedtux.dkms2ppa/dkms2ppa" ppa:notarrjay/fio-dkms xenial
+"${srcdir}/vendor/com.github.zedtux.dkms2ppa/dkms2ppa" ppa:notarrjay/fio-dkms xenial hewt1ojkif@gmail.com
