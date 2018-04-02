@@ -109,7 +109,7 @@ update_variables() {
 	# If no TARGET get the one from the host machine
 	[[ -z "$TARGET" ]] && TARGET=`lsb_release -cs`
 	MAINTAINER="$DEBFULLNAME <$DEBEMAIL>"
-	PACKAGE_VERSION="$VERSION-${TARGET}2"
+	PACKAGE_VERSION="$VERSION-${TARGET}3"
 }
 
 prepare_sources() {
@@ -117,10 +117,7 @@ prepare_sources() {
 	KERNEL_MODULE_SOURCE_PATH="/usr/src/$PACKAGE_NAME-$PACKAGE_VERSION"
 	[[ -d "$KERNEL_MODULE_SOURCE_PATH" ]] && rm -rf "$KERNEL_MODULE_SOURCE_PATH"
 	mkdir "$KERNEL_MODULE_SOURCE_PATH"
-	cp $SOURCE_FOLDER_PATH/*.c "$KERNEL_MODULE_SOURCE_PATH"
-	cp $SOURCE_FOLDER_PATH/*.h "$KERNEL_MODULE_SOURCE_PATH"
-	cp $SOURCE_FOLDER_PATH/Makefile "$KERNEL_MODULE_SOURCE_PATH"
-	cp $SOURCE_FOLDER_PATH/dkms.conf "$KERNEL_MODULE_SOURCE_PATH"
+	cp $SOURCE_FOLDER_PATH/* "$KERNEL_MODULE_SOURCE_PATH"
 }
 
 # ~~~~ DKMS functions ~~~~
@@ -217,7 +214,7 @@ sign_and_upload_source() {
 	CHANGES_FILE_PATH="/var/lib/dkms/$PACKAGE_NAME/$PACKAGE_VERSION/dsc/$PACKAGE_NAME-dkms_${PACKAGE_VERSION}_source.changes"
 
 	echo "   -> Signing package..."
-	bash -x $(which debsign) "$CHANGES_FILE_PATH"
+	debsign "$CHANGES_FILE_PATH"
 
 	echo "   -> Uploading package..."
 	dput $DPUT_ENTRY "$CHANGES_FILE_PATH"
