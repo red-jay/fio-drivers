@@ -24,6 +24,12 @@ rm -rf "${iomem_extract}"
 tgt=(/usr/src/iomemory-*)
 sudo mv /usr/src/iomemory-*/dkms.conf.example "${tgt[0]}"/dkms.conf
 
+# build
+. /usr/src/iomemory-*/dkms.conf
+sudo dkms add   -m iomemory-vsl -v "${PACKAGE_VERSION}" -k "${kernelver}"
+sudo dkms build -m iomemory-vsl -v "${PACKAGE_VERSION}" -k "${kernelver}"
+sudo dkms mkdeb -m iomemory-vsl -v "${PACKAGE_VERSION}" -k "${kernelver}"
+
 # the above actually set up local dkms. shuffle _again_ for dkms2ppa
 dkms2ppa_root=$(mktemp -d)
 dkms2ppa_dir="${dkms2ppa_root}/iomemory-vsl"
