@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
+set -eux
+set -o pipefail
+
 GPG_PASSFILE=(/dev/shm/pass.*)
 
 export DEBSIGN_PROGRAM="gpg --no-tty --passphrase-file ${GPG_PASSFILE[0]}"
-
-set -eux
-set -o pipefail
 
 # derive the useful kernel via installed files, sure
 kernelver=(/boot/vmlinuz-*-generic)
