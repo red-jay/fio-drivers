@@ -1,0 +1,17 @@
+diff -uNr iomemory-vsl-3.2.14/Makefile iomemory-vsl-3.2.14.patch/Makefile
+--- iomemory-vsl-3.2.14/Makefile	2017-01-31 14:05:06.000000000 -0500
++++ iomemory-vsl-3.2.14.patch/Makefile	2018-04-02 03:20:44.196805248 -0400
+@@ -65,11 +65,11 @@
+ 	rm -rf include/fio/port/linux/kfio_config.h kfio_config
+ 
+ include/fio/port/linux/kfio_config.h: kfio_config.sh
+-	./$< -a $(FIOARCH) -o $@ -k $(KERNEL_SRC) -p -d $(CURDIR)/kfio_config -l $(FUSION_DEBUG)
++	bash ./$< -a $(FIOARCH) -o $@ -k $(KERNEL_SRC) -p -d $(CURDIR)/kfio_config -l $(FUSION_DEBUG)
+ 
+ .PHONY: check_target_kernel
+ check_target_kernel:
+-	@ret="$$(./check_target_kernel.sh "$(KERNELVER)" "$(KERNEL_SRC)")" ; \
++	@ret="$$(bash ./check_target_kernel.sh "$(KERNELVER)" "$(KERNEL_SRC)")" ; \
+ 	if [ -n "$$ret" ] ; then \
+ 		echo "" ; \
+ 		echo "Change found in target kernel: $$ret" ; \

@@ -24,6 +24,9 @@ rm -rf "${iomem_extract}"
 tgt=(/usr/src/iomemory-*)
 sudo mv /usr/src/iomemory-*/dkms.conf.example "${tgt[0]}"/dkms.conf
 
+# patch makefile
+pushd "${tgt[0]}" && patch -p1 < "${srcdir}/Makefile.patch" && popd
+
 # build
 . /usr/src/iomemory-*/dkms.conf
 sudo dkms add   -m iomemory-vsl -v "${PACKAGE_VERSION}" -k "${kernelver}"
