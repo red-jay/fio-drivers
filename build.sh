@@ -5,7 +5,7 @@ set -o pipefail
 
 GPG_PASSFILE=(/dev/shm/pass.*)
 
-export DEFAULT_DEBSIGN_PROGRAM="gpg --no-tty --trusted-key 0x7D1110294E694719 --passphrase-file ${GPG_PASSFILE[0]} --local-user 0x7D1110294E694719"
+printf 'DEBSIGN_PROGRAM="gpg --no-tty --trusted-key 0x7D1110294E694719 --passphrase-file %s --local-user 0x7D1110294E694719"\n' "${GPG_PASSFILE[0]}" > "${HOME}/.devscripts"
 
 # derive the useful kernel via installed files, sure
 kernelver=(/boot/vmlinuz-*-generic)
