@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export DEBSIGN_PROGRAM="gpg --no-tty --passphrase ${GPG_PASSPHRASE}"
+
 set -eux
 set -o pipefail
 
