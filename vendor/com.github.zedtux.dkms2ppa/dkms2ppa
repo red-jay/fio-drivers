@@ -109,7 +109,7 @@ update_variables() {
 	# If no TARGET get the one from the host machine
 	[[ -z "$TARGET" ]] && TARGET=`lsb_release -cs`
 	MAINTAINER="$DEBFULLNAME <$DEBEMAIL>"
-	PACKAGE_VERSION="$VERSION-${TARGET}4"
+	PACKAGE_VERSION="$VERSION-0ubuntu~ppa1${TARGET:0:1}"
 }
 
 prepare_sources() {
