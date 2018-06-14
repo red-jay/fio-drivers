@@ -45,3 +45,26 @@ sudo cp -a "${tgt[0]}" "${dkms2ppa_dir}/iomemory-vsl"
 
 cd "${dkms2ppa_dir}"
 "${srcdir}/vendor/com.github.zedtux.dkms2ppa/dkms2ppa" ppa:notarrjay/fio-dkms "RJ Bergeron" "hewt1ojkif@gmail.com" xenial
+
+# publish apt repo
+cd "${srcdir}"
+
+git branch --track gh-pages remotes/origin/gh-pages
+gh_pages=$(mktemp -d)
+git clone -b gh-pages file://$(pwd)/.git "$(gh_pages)"
+
+cd "${gh_pages}"
+git config user.email "hhewt1ojkif@gmail.com"
+git config user.name "RJ Bergeron"
+mkdir -p dists/fio/release/binary-amd64
+apt-ftparchive packages pool > dists/fio/release/binary-amd64/Packages
+apt-ftparchive release "-c=${srcdir}/aptftp.conf" dists/fio >dists/fio/Release
+. "${HOME}/.devscripts"
+${DEBSIGN_PROGRAM} -bao dists/fio/Release.gpg dists/fio/Release
+git add *
+git commit -a -m "updated via CI build"
+git push
+
+# back to the real checkout here
+cd "${srcdir}"
+git push origin gh-pages
