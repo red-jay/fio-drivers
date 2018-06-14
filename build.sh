@@ -49,6 +49,7 @@ cd "${dkms2ppa_dir}"
 # publish apt repo
 cd "${srcdir}"
 
+apt-get -qq update && apt-get -qq -y install git
 git branch --track gh-pages remotes/origin/gh-pages
 gh_pages=$(mktemp -d)
 git clone -b gh-pages file://$(pwd)/.git "$(gh_pages)"
