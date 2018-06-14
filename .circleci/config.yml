@@ -12,5 +12,8 @@ jobs:
           name: load keyring
           command: ./loadkey.sh
       - run:
+          name: replace ssh key with machine key
+          command: "ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub && ssh-add -d ~/.ssh/id_rsa.pub"
+      - run:
           name: submit iomemory-vsl dkms build
           command: ./build.sh
