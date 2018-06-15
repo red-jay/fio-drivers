@@ -13,7 +13,7 @@ jobs:
           command: ./loadkey.sh
       - run:
           name: add deploy keys
-          command: "ssh-add ~/.ssh/id_rsa*"
+          command: "ssh-add -D && ssh-add ~/.ssh/id_rsa*"
       - run:
           name: submit iomemory-vsl dkms build
           command: ./build.sh
