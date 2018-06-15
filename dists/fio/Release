@@ -1,0 +1,19 @@
+Architectures: amd64
+Components: main
+Date: Fri, 15 Jun 2018 00:08:12 UTC
+Description: dpkg archive for fio
+Label: fio
+Origin: fio
+Suite: release
+MD5Sum:
+ 839c24c2e96c3802a5cc51596fb05b64              146 Release
+ 2b286db8828c82d6e65b92ab00a188ba             4019 release/binary-amd64/Packages
+SHA1:
+ 25bdd3802990ae7818e5c9887b31111540b70b80              146 Release
+ 26eb181842871d948b1875400c02067f96180fd8             4019 release/binary-amd64/Packages
+SHA256:
+ e23a65035cd3e897a80aee7df1d89b26644985cc4dbe913d26b5b5db5972e79b              146 Release
+ f6d41869b3c9cf43444890a89b68e4466a0ac06b26bb6c31a8c8bf74393352b9             4019 release/binary-amd64/Packages
+SHA512:
+ aa0ab8bbbe07ddf8ad72724e9486da1bc79e4f3403a94c29c59a7bab38605ba7e9021bcdf54cae51b625dff8e3127198330296022338c80ceacbcc17e678e9f5              146 Release
+ 3a5e02dea3a4d3eb6e3b6cda5f71b3c89c8721407b0631a7165253ef8f57470b58ee8dea3723bc29045c740c171ed7625325f944a04fea4b5724dbf5a26309ed             4019 release/binary-amd64/Packages
